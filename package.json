@@ -82,6 +82,18 @@
 					"command": "atest"
 				}
 			]
+		},
+		"contributes": {
+			"languages": [
+			  {
+				"id": "api-testing",
+				"extensions": [".yaml", ".yml"],
+				"aliases": ["API Testing"],
+				"filenames": [],
+				"firstLine": "^#!api-testing",
+				"configuration": "./language-configuration.json"
+			  }
+			]
 		}
 	},
 	"scripts": {
