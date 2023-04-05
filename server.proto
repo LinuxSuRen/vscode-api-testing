@@ -11,6 +11,7 @@ service Runner {
 message TestTask {
     string data = 1;
     string kind = 2;
+    string caseName = 3;
 }
 
 message HelloReply {

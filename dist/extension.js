@@ -43301,7 +43301,39 @@ var serverProto = grpc.loadPackageDefinition(packageDefinition).server;
 var apiConsole = vscode.window.createOutputChannel("API Testing");
 function activate(context) {
   console.log('Congratulations, your extension "api-testing" is now active!');
-  let atest = vscode.commands.registerCommand("atest", function() {
+  const toggleLink = {
+    provideCodeLenses: function(document2, token) {
+      if (document2.lineAt(0).text !== "#!api-testing") {
+        return [];
+      }
+      const range = new vscode.Range(0, 1, 10, 10);
+      const lens = new vscode.CodeLens(range, {
+        command: "atest",
+        title: "Run Suite"
+      });
+      let result = [lens];
+      for (let i = 0; i < document2.lineCount; i++) {
+        let nameAnchor = document2.lineAt(i).text;
+        if (nameAnchor.startsWith("- name: ")) {
+          let name = nameAnchor.replace("- name: ", "");
+          const range2 = new vscode.Range(i, 1, 10, 10);
+          const testcaseLens = new vscode.CodeLens(range2, {
+            command: "atest",
+            title: "Run Case",
+            arguments: [name]
+          });
+          result.push(testcaseLens);
+        }
+      }
+      return result;
+    },
+    resolveCodeLens: function(code, token) {
+      return code;
+    }
+  };
+  const codeLens = vscode.languages.registerCodeLensProvider({ language: "yaml", scheme: "file" }, toggleLink);
+  context.subscriptions.push(codeLens);
+  let atest = vscode.commands.registerCommand("atest", function(args) {
     if (vscode.workspace.workspaceFolders !== void 0) {
       let filename = vscode.window.activeTextEditor.document.fileName;
       const addr = vscode.workspace.getConfiguration().get("api-testing.server");
@@ -43319,10 +43351,17 @@ function activate(context) {
         const data = fs.readFileSync(filename);
         task = data.toString();
       }
+      let kind = "suite";
+      let caseName = "";
+      if (args && args.length > 0) {
+        kind = "testcaseInSuite";
+        caseName = args;
+      }
       const client = new serverProto.Runner(addr, grpc.credentials.createInsecure());
       client.run({
-        kind: "suite",
-        data: task
+        kind,
+        data: task,
+        caseName
       }, function(err, response) {
         if (err !== void 0 && err !== null) {
           apiConsole.appendLine(err + " with " + addr);

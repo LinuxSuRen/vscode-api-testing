@@ -2,7 +2,7 @@
 	"name": "api-testing",
 	"displayName": "API Testing",
 	"description": "API Testing",
-	"version": "0.0.1",
+	"version": "0.0.2",
 	"repository": "https://github.com/linuxsuren/vscode-api-testing",
 	"engines": {
 		"vscode": "^1.68.0"

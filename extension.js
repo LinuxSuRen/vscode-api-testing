@@ -28,7 +28,46 @@ const apiConsole = vscode.window.createOutputChannel("API Testing")
 function activate(context) {
 	console.log('Congratulations, your extension "api-testing" is now active!');
 
-	let atest = vscode.commands.registerCommand('atest', function() {
+	const toggleLink = {
+		provideCodeLenses: function (document, token) {
+			if (document.lineAt(0).text !== "#!api-testing") {
+				return []
+			}
+
+			// for the whole test suite
+			const range = new vscode.Range(0, 1, 10, 10)
+			const lens = new vscode.CodeLens(range, {
+				command: 'atest',
+				title: 'Run Suite'
+			})
+			let result = [lens]
+
+			// for test cases
+			for (let i = 0; i < document.lineCount; i++) {
+				let nameAnchor = document.lineAt(i).text
+				if (nameAnchor.startsWith('- name: ')) {
+					let name = nameAnchor.replace('- name: ', '')
+					const range = new vscode.Range(i, 1, 10, 10)
+					const testcaseLens = new vscode.CodeLens(range, {
+						command: 'atest',
+						title: 'Run Case',
+						arguments: [name]
+					})
+					result.push(testcaseLens)
+				}
+			}
+
+			return result
+		},
+		resolveCodeLens: function (code,token) {
+			return code
+		}
+	  }
+
+	const codeLens = vscode.languages.registerCodeLensProvider({ language: 'yaml', scheme: 'file' }, toggleLink)
+	context.subscriptions.push(codeLens)
+
+	let atest = vscode.commands.registerCommand('atest', function(args) {
 		if(vscode.workspace.workspaceFolders !== undefined) {
 			let filename = vscode.window.activeTextEditor.document.fileName
 			const addr = vscode.workspace.getConfiguration().get('api-testing.server')
@@ -49,10 +88,18 @@ function activate(context) {
 				task = data.toString()
 			}
 
+			let kind = "suite"
+			let caseName = ""
+			if (args && args.length > 0) {
+				kind = "testcaseInSuite"
+				caseName = args
+			}
+
 			const client = new serverProto.Runner(addr, grpc.credentials.createInsecure());
 			client.run({
-				kind: "suite",
-				data: task
+				kind: kind,
+				data: task,
+				caseName: caseName
 			} , function(err, response) {
 				if (err !== undefined && err !== null) {
 					apiConsole.appendLine(err + " with " + addr);
