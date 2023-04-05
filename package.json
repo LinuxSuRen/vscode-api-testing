@@ -2,7 +2,7 @@
 	"name": "api-testing",
 	"displayName": "API Testing",
 	"description": "API Testing",
-	"version": "0.0.1",
+	"version": "0.0.2",
 	"repository": "https://github.com/linuxsuren/vscode-api-testing",
 	"engines": {
 		"vscode": "^1.68.0"
@@ -81,18 +81,6 @@
 					"group": "navigation",
 					"command": "atest"
 				}
-			]
-		},
-		"contributes": {
-			"languages": [
-			  {
-				"id": "api-testing",
-				"extensions": [".yaml", ".yml"],
-				"aliases": ["API Testing"],
-				"filenames": [],
-				"firstLine": "^#!api-testing",
-				"configuration": "./language-configuration.json"
-			  }
 			]
 		}
 	},
