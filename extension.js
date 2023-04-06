@@ -2,9 +2,11 @@
 // Import the module and reference it with the alias vscode in your code below
 const vscode = require('vscode');
 const fs = require('fs');
+const yaml = require('js-yaml');
 
 const grpc = require('@grpc/grpc-js');
 const protoLoader = require('@grpc/proto-loader');
+const { isLength } = require('lodash');
 const PROTO_PATH = __dirname +'/server.proto';
 const packageDefinition = protoLoader.loadSync(
   PROTO_PATH, { 
@@ -40,14 +42,18 @@ function activate(context) {
 				command: 'atest',
 				title: 'Run Suite'
 			})
-			let result = [lens]
+			const lensRunWith = new vscode.CodeLens(range, {
+				command: 'atest.runwith',
+				title: 'Run Suite With Env'
+			})
+			let result = [lens, lensRunWith]
 
 			// for test cases
 			for (let i = 0; i < document.lineCount; i++) {
 				let nameAnchor = document.lineAt(i).text
 				if (nameAnchor.startsWith('- name: ')) {
 					let name = nameAnchor.replace('- name: ', '')
-					const range = new vscode.Range(i, 1, 10, 10)
+					const range = new vscode.Range(i, 1, i, 10)
 					const testcaseLens = new vscode.CodeLens(range, {
 						command: 'atest',
 						title: 'Run Case',
@@ -114,7 +120,68 @@ function activate(context) {
 		}
 	})
 
-	context.subscriptions.push(atest);
+	
+	let atestRunWith = vscode.commands.registerCommand('atest.runwith', function(args) {
+		if(vscode.workspace.workspaceFolders !== undefined) {
+			let wf = vscode.workspace.workspaceFolders[0].uri.path ;
+			try {
+				const doc = yaml.load(fs.readFileSync(wf + '/env.yaml', 'utf8'))
+				let items = []
+				let dataMap = {}
+				for (let i = 0; i < doc.length; i++) {
+					items.push(doc[i].name)
+					dataMap[doc[i].name] = doc[i].env
+				}
+
+				vscode.window.showQuickPick(items).then((val) => {
+					let filename = vscode.window.activeTextEditor.document.fileName
+					const addr = vscode.workspace.getConfiguration().get('api-testing.server')
+					apiConsole.show()
+					const data = fs.readFileSync(filename);
+					const task = data.toString()
+
+					let kind = "suite"
+					let caseName = ""
+					if (args && args.length > 0) {
+						kind = "testcaseInSuite"
+						caseName = args
+					}
+
+					const client = new serverProto.Runner(addr, grpc.credentials.createInsecure());
+					client.run({
+						kind: kind,
+						data: task,
+						caseName: caseName,
+						env: dataMap[val]
+					} , function(err, response) {
+						if (err !== undefined && err !== null) {
+							apiConsole.appendLine(err + " with " + addr);
+						} else {
+							apiConsole.appendLine(response.message);
+						}
+					});
+				})
+			} catch (e) {
+				vscode.window.showInformationMessage("Env file is missing. Do you want to create it?", "Yes", "No").then(answer => {
+					if (answer === "Yes") {
+						const wsedit = new vscode.WorkspaceEdit();
+						const wsPath = vscode.workspace.workspaceFolders[0].uri.path;
+						const filePath = vscode.Uri.file(wsPath + '/env.yaml');
+						var contents = new TextEncoder().encode(`- name: localhost
+  env:
+    SERVER: http://localhost:9090`);
+						wsedit.createFile(filePath, {
+							ignoreIfExists: true,
+							contents: contents
+						});
+						vscode.workspace.applyEdit(wsedit);
+					}
+				})
+			}
+		}
+	})
+
+	context.subscriptions.push(atest, atestRunWith);
 }
 
 // this method is called when your extension is deactivated
