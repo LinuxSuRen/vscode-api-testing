@@ -1,8 +1,8 @@
 {
 	"name": "api-testing",
 	"displayName": "API Testing",
-	"description": "API Testing",
-	"version": "0.0.4",
+	"description": "YAML based API Testing",
+	"version": "0.0.5",
 	"repository": "https://github.com/linuxsuren/vscode-api-testing",
 	"engines": {
 		"vscode": "^1.68.0"
@@ -12,7 +12,7 @@
 	],
 	"publisher": "linuxsuren",
 	"activationEvents": [
-		"onStartupFinished"
+		"onLanguage:yaml"
 	],
 	"main": "./dist/extension.js",
 	"contributes": {
@@ -44,45 +44,18 @@
 				"group": "Go group 1"
 			}
 		],
-		"markdown.editorContextMenuCommands": {
-			"type": "object",
-			"properties": {
-				"testPackage": {
-					"type": "boolean",
-					"default": true,
-					"description": "If true, adds command to run all tests in the current package to the editor context menu"
-				}
-			},
-			"default": {
-				"testPackage": false
-			},
-			"description": "Experimental Feature: Enable/Disable entries from the context menu in the editor.",
-			"scope": "resource"
-		},
 		"menus": {
 			"explorer/context": [
 				{
 					"when": "resourceLangId == yaml",
-					"group": "navigation",
+					"group": "1_run",
 					"command": "atest"
 				}
 			],
 			"editor/context": [
 				{
 					"when": "resourceLangId == yaml",
-					"group": "navigation",
-					"command": "atest"
-				}
-			],
-			"testing/item/context": [
-				{
-					"group": "navigation",
-					"command": "atest"
-				}
-			],
-			"testing/item/gutter": [
-				{
-					"group": "navigation",
+					"group": "1_run",
 					"command": "atest"
 				}
 			]
