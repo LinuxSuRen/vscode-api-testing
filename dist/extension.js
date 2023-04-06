@@ -51727,63 +51727,61 @@ function activate(context) {
     }
   });
   let atestRunWith = vscode.commands.registerCommand("atest.runwith", function(args) {
-    if (vscode.workspace.workspaceFolders !== void 0) {
-      let wf = vscode.workspace.workspaceFolders[0].uri.path;
-      try {
-        const doc = yaml.load(fs.readFileSync(wf + "/env.yaml", "utf8"));
-        let items = [];
-        let dataMap = {};
-        for (let i = 0; i < doc.length; i++) {
-          items.push(doc[i].name);
-          dataMap[doc[i].name] = doc[i].env;
-        }
-        vscode.window.showQuickPick(items).then((val) => {
-          let filename = vscode.window.activeTextEditor.document.fileName;
-          const addr = vscode.workspace.getConfiguration().get("api-testing.server");
-          apiConsole.show();
-          const data = fs.readFileSync(filename);
-          const task = data.toString();
-          let kind = "suite";
-          let caseName = "";
-          if (args && args.length > 0) {
-            kind = "testcaseInSuite";
-            caseName = args;
-          }
-          const client = new serverProto.Runner(addr, grpc.credentials.createInsecure());
-          client.run({
-            kind,
-            data: task,
-            caseName,
-            env: dataMap[val]
-          }, function(err, response) {
-            if (err !== void 0 && err !== null) {
-              apiConsole.appendLine(err + " with " + addr);
-            } else {
-              apiConsole.appendLine(response.message);
-            }
-          });
-        });
-      } catch (e) {
-        vscode.window.showInformationMessage("Env file is missing. Do you want to create it?", "Yes", "No").then((answer) => {
-          if (answer === "Yes") {
-            const wsedit = new vscode.WorkspaceEdit();
-            const wsPath = vscode.workspace.workspaceFolders[0].uri.path;
-            const filePath = vscode.Uri.file(wsPath + "/env.yaml");
-            var contents = new TextEncoder().encode(`- name: localhost
-  env:
-    SERVER: http://localhost:9090`);
-            wsedit.createFile(filePath, {
-              ignoreIfExists: true,
-              contents
-            });
-            vscode.workspace.applyEdit(wsedit);
-          }
-        });
+    const dir = require("path").dirname(vscode.window.activeTextEditor.document.uri.fsPath);
+    try {
+      const doc = yaml.load(fs.readFileSync(dir + "/env.yaml", "utf8"));
+      let items = [];
+      let dataMap = {};
+      for (let i = 0; i < doc.length; i++) {
+        items.push(doc[i].name);
+        dataMap[doc[i].name] = doc[i].env;
       }
+      vscode.window.showQuickPick(items).then((val) => {
+        let filename = vscode.window.activeTextEditor.document.fileName;
+        const addr = vscode.workspace.getConfiguration().get("api-testing.server");
+        apiConsole.show();
+        const data = fs.readFileSync(filename);
+        const task = data.toString();
+        let kind = "suite";
+        let caseName = "";
+        if (args && args.length > 0) {
+          kind = "testcaseInSuite";
+          caseName = args;
+        }
+        const client = new serverProto.Runner(addr, grpc.credentials.createInsecure());
+        client.run({
+          kind,
+          data: task,
+          caseName,
+          env: dataMap[val]
+        }, function(err, response) {
+          if (err !== void 0 && err !== null) {
+            apiConsole.appendLine(err + " with " + addr);
+          } else {
+            apiConsole.appendLine(response.message);
+          }
+        });
+      });
+    } catch (e) {
+      vscode.window.showInformationMessage("Env file is missing. Do you want to create it?", "Yes", "No").then((answer) => {
+        if (answer === "Yes") {
+          const wsedit = new vscode.WorkspaceEdit();
+          const filePath = vscode.Uri.file(dir + "/env.yaml");
+          var contents = new TextEncoder().encode(defaultEnv);
+          wsedit.createFile(filePath, {
+            ignoreIfExists: true,
+            contents
+          });
+          vscode.workspace.applyEdit(wsedit);
+        }
+      });
     }
   });
   context.subscriptions.push(atest, atestRunWith);
 }
+var defaultEnv = `- name: localhost
+  env:
+    SERVER: http://localhost:9090`;
 function deactivate() {
 }
 module.exports = {
