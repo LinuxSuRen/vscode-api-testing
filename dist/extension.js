@@ -51666,6 +51666,7 @@ function activate(context) {
       let result = [lens, lensRunWith];
       for (let i = 0; i < document2.lineCount; i++) {
         let nameAnchor = document2.lineAt(i).text;
+        nameAnchor = nameAnchor.trimLeft(" ", "");
         if (nameAnchor.startsWith("- name: ")) {
           let name = nameAnchor.replace("- name: ", "");
           const range2 = new vscode.Range(i, 1, i, 10);

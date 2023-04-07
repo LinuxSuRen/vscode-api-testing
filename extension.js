@@ -51,6 +51,7 @@ function activate(context) {
 			// for test cases
 			for (let i = 0; i < document.lineCount; i++) {
 				let nameAnchor = document.lineAt(i).text
+				nameAnchor = nameAnchor.trimLeft(' ', '')
 				if (nameAnchor.startsWith('- name: ')) {
 					let name = nameAnchor.replace('- name: ', '')
 					const range = new vscode.Range(i, 1, i, 10)
