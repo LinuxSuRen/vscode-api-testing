@@ -40,11 +40,11 @@ function activate(context) {
 			const range = new vscode.Range(0, 1, 10, 10)
 			const lens = new vscode.CodeLens(range, {
 				command: 'atest',
-				title: 'Run Suite'
+				title: 'run suite'
 			})
 			const lensRunWith = new vscode.CodeLens(range, {
 				command: 'atest.runwith',
-				title: 'Run Suite With Env'
+				title: 'run suite with env'
 			})
 			let result = [lens, lensRunWith]
 
@@ -57,10 +57,15 @@ function activate(context) {
 					const range = new vscode.Range(i, 1, i, 10)
 					const testcaseLens = new vscode.CodeLens(range, {
 						command: 'atest',
-						title: 'Run Case',
-						arguments: [name]
+						title: 'run',
+						arguments: [name, "info"]
 					})
-					result.push(testcaseLens)
+					const testcaseDebugLens = new vscode.CodeLens(range, {
+						command: 'atest',
+						title: 'debug',
+						arguments: [name, "debug"]
+					})
+					result.push(testcaseLens, testcaseDebugLens)
 				}
 			}
 
@@ -74,39 +79,27 @@ function activate(context) {
 	const codeLens = vscode.languages.registerCodeLensProvider({ language: 'yaml', scheme: 'file' }, toggleLink)
 	context.subscriptions.push(codeLens)
 
-	let atest = vscode.commands.registerCommand('atest', function(args) {
+	let atest = vscode.commands.registerCommand('atest', function(name, level) {
 		if(vscode.workspace.workspaceFolders !== undefined) {
 			let filename = vscode.window.activeTextEditor.document.fileName
 			const addr = vscode.workspace.getConfiguration().get('api-testing.server')
 			apiConsole.show()
-			let task 
 
-			let editor = vscode.window.activeTextEditor
-			if (editor) {
-				let selection = editor.selection
-				let text = editor.document.getText(selection)
-				if (text !== undefined && text !== '') {
-					task = text
-				}
-			}
-
-			if (task === undefined || task === '') {
-				const data = fs.readFileSync(filename);
-				task = data.toString()
-			}
-
+			const data = fs.readFileSync(filename);
+			let task = data.toString()
 			let kind = "suite"
 			let caseName = ""
-			if (args && args.length > 0) {
+			if (name) {
 				kind = "testcaseInSuite"
-				caseName = args
+				caseName = name
 			}
 
 			const client = new serverProto.Runner(addr, grpc.credentials.createInsecure());
 			client.run({
 				kind: kind,
 				data: task,
-				caseName: caseName
+				caseName: caseName,
+				level: level
 			} , function(err, response) {
 				if (err !== undefined && err !== null) {
 					apiConsole.appendLine(err + " with " + addr);
