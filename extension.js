@@ -105,6 +105,7 @@ function activate(context) {
 					apiConsole.appendLine(err + " with " + addr);
 				} else {
 					apiConsole.appendLine(response.message);
+					apiConsole.appendLine(response.error);
 				}
 			 });
 		}  else {
@@ -152,6 +153,7 @@ function activate(context) {
 						apiConsole.appendLine(err + " with " + addr);
 					} else {
 						apiConsole.appendLine(response.message);
+						apiConsole.appendLine(response.error);
 					}
 				});
 			})
