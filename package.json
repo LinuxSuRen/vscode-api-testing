@@ -2,7 +2,7 @@
 	"name": "api-testing",
 	"displayName": "API Testing",
 	"description": "YAML based API Testing",
-	"version": "0.0.7",
+	"version": "0.0.8",
 	"repository": "https://github.com/linuxsuren/vscode-api-testing",
 	"engines": {
 		"vscode": "^1.68.0"
@@ -32,7 +32,7 @@
 			"properties": {
 				"api-testing.server": {
 					"type": "string",
-					"default": "localhost:9090",
+					"default": "localhost:7070",
 					"description": "server"
 				}
 			}
@@ -90,12 +90,14 @@
 	"dependencies": {
 		"@grpc/grpc-js": "~1.0.5",
 		"@grpc/proto-loader": "~0.5.4",
+		"follow-redirects": "^1.15.2",
 		"google-protobuf": "~3.14.0",
 		"js-yaml": "^4.1.0",
 		"lodash": "~4.17.0",
 		"q": "^1.5.1",
 		"remark": "^14.0.2",
 		"remark-admonitions": "^1.2.1",
-		"remark-html": "^15.0.1"
+		"remark-html": "^15.0.1",
+		"which": "^3.0.0"
 	}
 }

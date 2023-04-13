@@ -6,7 +6,12 @@ Start [atest](https://github.com/linuxsuren/api-testing) in server mode before g
 You could run it in Docker or Kubernetes, please see also the following example:
 
 ```shell
-docker run -d -p 9090:9090 ghcr.io/linuxsuren/api-testing
+docker run -d -p 7070:7070 ghcr.io/linuxsuren/api-testing
+```
+
+or you could run atest as Linux service:
+```
+atest service --action install
 ```
 
 ## Usage
@@ -17,5 +22,5 @@ For mulitple environments use case, you could put a special file `env.yaml` in y
 ```yaml
 - name: localhost # environment name
   env:
-    SERVER: http://localhost:9090 # environment variables
+    SERVER: http://localhost:7070 # environment variables
 ```
