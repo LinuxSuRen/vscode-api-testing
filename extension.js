@@ -2,11 +2,11 @@
 // Import the module and reference it with the alias vscode in your code below
 const vscode = require('vscode');
 const fs = require('fs');
+const https = require('follow-redirects').https;
 const yaml = require('js-yaml');
-
+const cp = require('child_process');
 const grpc = require('@grpc/grpc-js');
 const protoLoader = require('@grpc/proto-loader');
-const { isLength } = require('lodash');
 const PROTO_PATH = __dirname +'/server.proto';
 const packageDefinition = protoLoader.loadSync(
   PROTO_PATH, { 
@@ -174,11 +174,56 @@ function activate(context) {
 	})
 
 	context.subscriptions.push(atest, atestRunWith);
+
+	var which = require('which')
+	which('atest', { nothrow: true }).then((p) => {
+		if (p) {
+			startAtestServer()
+		} else {
+			vscode.window.withProgress({
+				location: vscode.ProgressLocation.Window,
+				cancellable: false,
+				title: 'Downloading ATest'
+			}, async (progress) => {
+				progress.report({  increment: 0 });
+				https.get("https://ghproxy.com/https://github.com/LinuxSuRen/api-testing/releases/latest/download/atest-linux-amd64.tar.gz", function(response) {
+					const file = fs.createWriteStream('/tmp/atest.tar.gz');
+					response.pipe(file);
+
+					// after download completed close filestream
+					file.on("finish", () => {
+						file.close(() => {
+							cp.execSync('tar xzvf /tmp/atest.tar.gz atest && install atest /usr/local/bin/atest')
+							vscode.window.showInformationMessage('API Testing server downloaded.')
+							startAtestServer()
+			
+							progress.report({ increment: 100 });
+						})
+					});
+				});
+				// await Promise.resolve();
+			});
+		}
+	})
+}
+
+function startAtestServer() {
+	cp.exec('atest service install', (err) => {
+		if (!err){
+			cp.exec("systemctl start atest", (err, output) => {
+				if (err) {
+					vscode.window.showInformationMessage('Failed to start API Testing service. ' + err)
+				}
+			})
+		} else {
+			vscode.window.showInformationMessage('Failed to install API Testing service. ' + err)
+		}
+	})
 }
 
 const defaultEnv = `- name: localhost
   env:
-    SERVER: http://localhost:9090`
+    SERVER: http://localhost:7070`
 
 // this method is called when your extension is deactivated
 function deactivate() {}
