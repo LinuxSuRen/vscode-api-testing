@@ -185,6 +185,7 @@ function activate(context) {
 				cancellable: false,
 				title: 'Downloading ATest'
 			}, async (progress) => {
+				console.log('start to donwload')
 				progress.report({  increment: 0 });
 				https.get("https://ghproxy.com/https://github.com/LinuxSuRen/api-testing/releases/latest/download/atest-linux-amd64.tar.gz", function(response) {
 					const file = fs.createWriteStream('/tmp/atest.tar.gz');
@@ -193,15 +194,30 @@ function activate(context) {
 					// after download completed close filestream
 					file.on("finish", () => {
 						file.close(() => {
-							cp.execSync('tar xzvf /tmp/atest.tar.gz atest && install atest /usr/local/bin/atest')
 							vscode.window.showInformationMessage('API Testing server downloaded.')
-							startAtestServer()
-			
+
+							try {
+								fs.accessSync('/usr/local/bin', fs.constants.W_OK);
+
+								cp.execSync('tar xzvf /tmp/atest.tar.gz atest && install atest /usr/local/bin/atest')
+								startAtestServer()
+							} catch (err) {
+								vscode.window.showInformationMessage('Install atest in a new terminal?', 'Yes', "No").then((v)=>{
+									if (v === 'Yes') {
+										let terminal=vscode.window.createTerminal({name:'atest'})
+										terminal.sendText('tar xzvf /tmp/atest.tar.gz atest && sudo install atest /usr/local/bin/atest && rm -rf atest && sudo atest service install && sudo atest service start && exit')
+										terminal.show()
+									}
+								})
+							}
+
 							progress.report({ increment: 100 });
 						})
 					});
+				}).on('error', (e) => {
+					console.log(e)
 				});
-				// await Promise.resolve();
+				await Promise.resolve();
 			});
 		}
 	})
