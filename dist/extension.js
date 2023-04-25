@@ -46853,7 +46853,19 @@ var packageDefinition = protoLoader.loadSync(
 );
 var serverProto = grpc.loadPackageDefinition(packageDefinition).server;
 var apiConsole = vscode.window.createOutputChannel("API Testing");
+var statusBar = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left);
+statusBar.text = "$(warning) ATest";
+setInterval(function() {
+  cp.exec("atest service status", (err) => {
+    if (err) {
+      statusBar.text = "$(warning) ATest";
+    } else {
+      statusBar.text = "$(pass) ATest";
+    }
+  });
+}, 3e3);
 function activate(context) {
+  statusBar.show();
   console.log('Congratulations, your extension "api-testing" is now active!');
   const toggleLink = {
     provideCodeLenses: function(document2, token) {
@@ -46896,7 +46908,7 @@ function activate(context) {
     }
   };
   const codeLens = vscode.languages.registerCodeLensProvider({ language: "yaml", scheme: "file" }, toggleLink);
-  context.subscriptions.push(codeLens);
+  context.subscriptions.push(codeLens, statusBar);
   let atest = vscode.commands.registerCommand("atest", function(name, level) {
     if (vscode.workspace.workspaceFolders !== void 0) {
       let filename = vscode.window.activeTextEditor.document.fileName;
@@ -46987,53 +46999,57 @@ function activate(context) {
     if (p) {
       startAtestServer();
     } else {
-      vscode.window.withProgress({
-        location: vscode.ProgressLocation.Window,
-        cancellable: false,
-        title: "Downloading ATest"
-      }, async (progress) => {
-        console.log("start to donwload");
-        progress.report({ increment: 0 });
-        https.get("https://ghproxy.com/https://github.com/LinuxSuRen/api-testing/releases/latest/download/atest-linux-amd64.tar.gz", function(response) {
-          const file = fs.createWriteStream("/tmp/atest.tar.gz");
-          response.pipe(file);
-          file.on("finish", () => {
-            file.close(() => {
-              vscode.window.showInformationMessage("API Testing server downloaded.");
-              try {
-                fs.accessSync("/usr/local/bin", fs.constants.W_OK);
-                cp.execSync("tar xzvf /tmp/atest.tar.gz atest && install atest /usr/local/bin/atest");
-                startAtestServer();
-              } catch (err) {
-                vscode.window.showInformationMessage("Install atest in a new terminal?", "Yes", "No").then((v) => {
-                  if (v === "Yes") {
-                    let terminal = vscode.window.createTerminal({ name: "atest" });
-                    terminal.sendText("tar xzvf /tmp/atest.tar.gz atest && sudo install atest /usr/local/bin/atest && rm -rf atest && sudo atest service install && sudo atest service start && exit");
-                    terminal.show();
-                  }
-                });
-              }
-              progress.report({ increment: 100 });
-            });
+      vscode.window.showInformationMessage("Start to install API Testing.");
+      https.get("https://ghproxy.com/https://github.com/LinuxSuRen/api-testing/releases/latest/download/atest-linux-amd64.tar.gz", function(response) {
+        const file = fs.createWriteStream("/tmp/atest.tar.gz");
+        response.pipe(file);
+        vscode.window.showInformationMessage("Receiving API Testing binary file.");
+        file.on("finish", () => {
+          file.close(() => {
+            vscode.window.showInformationMessage("API Testing server downloaded.");
+            try {
+              fs.accessSync("/usr/local/bin", fs.constants.W_OK);
+              cp.execSync("tar xzvf /tmp/atest.tar.gz atest && install atest /usr/local/bin/atest");
+              startAtestServer();
+            } catch (err) {
+              vscode.window.showInformationMessage("Install atest in a new terminal?", "Yes", "No").then((v) => {
+                if (v === "Yes") {
+                  let terminal = vscode.window.createTerminal({ name: "atest" });
+                  terminal.sendText("tar xzvf /tmp/atest.tar.gz atest && sudo install atest /usr/local/bin/atest && rm -rf atest && sudo atest service install && sudo atest service start && exit");
+                  terminal.show();
+                }
+              });
+            }
+            vscode.window.showInformationMessage("API Testing service is ready.");
           });
-        }).on("error", (e) => {
-          console.log(e);
         });
-        await Promise.resolve();
+      }).on("error", (e) => {
+        vscode.window.showErrorMessage("Failed to install API Testing." + e);
       });
     }
   });
 }
 function startAtestServer() {
-  cp.exec("atest service install", (err) => {
-    if (!err) {
-      cp.exec("systemctl start atest", (err2, output) => {
-        if (err2) {
-          vscode.window.showInformationMessage("Failed to start API Testing service. " + err2);
+  cp.exec("atest service status", (err) => {
+    if (err) {
+      cp.exec("atest service install", (err2) => {
+        if (!err2) {
+          cp.exec("atest service start", (err3) => {
+            if (err3) {
+              vscode.window.showErrorMessage("Failed to start API Testing service. " + err3);
+              statusBar.show();
+              statusBar.color = "red";
+            }
+          });
+        } else {
+          vscode.window.showInformationMessage("Require root permission to install atest service?", "Yes", "No").then((v) => {
+            if (v === "Yes") {
+              let terminal = vscode.window.createTerminal({ name: "atest" });
+              terminal.sendText("sudo atest service install && sudo atest service start && exit");
+            }
+          });
         }
       });
-    } else {
-      vscode.window.showInformationMessage("Failed to install API Testing service. " + err);
     }
   });
 }
