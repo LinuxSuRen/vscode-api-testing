@@ -227,6 +227,29 @@ function activate(context) {
 			});
 		}
 	})
+
+	context.subscriptions.push(vscode.languages.registerDocumentSymbolProvider({ scheme: 'file', language: 'yaml' }, {
+		provideDocumentSymbols(document) {
+			const symbols = [];
+			if (document.lineAt(0).text === '#!api-testing') {
+				const regex = new RegExp('^- name:');
+				for (let i = 0; i < document.lineCount; i++) {
+					const line = document.lineAt(i);
+					if (line.text.match(regex)) {
+						const symbol = new vscode.DocumentSymbol(
+							line.text.replace('- name: ', ''),
+							'',
+							vscode.SymbolKind.Namespace,
+							line.range,
+							line.range
+						);
+						symbols.push(symbol);
+					}
+				}
+				return symbols;
+			}
+		}
+	}))
 }
 
 function startAtestServer() {

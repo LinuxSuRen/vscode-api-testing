@@ -24,3 +24,7 @@ For mulitple environments use case, you could put a special file `env.yaml` in y
   env:
     SERVER: http://localhost:7070 # environment variables
 ```
+
+## Screenshots
+
+![](dist/outline.png)
