@@ -2,7 +2,7 @@
 	"name": "api-testing",
 	"displayName": "API Testing",
 	"description": "YAML based API Testing",
-	"version": "0.0.11",
+	"version": "0.0.12",
 	"repository": "https://github.com/linuxsuren/vscode-api-testing",
 	"engines": {
 		"vscode": "^1.68.0"
@@ -25,6 +25,11 @@
 			{
 				"command": "atest.runwith",
 				"title": "API Testing with a specific env"
+			},
+			{
+				"command": "atest.sample",
+				"title": "API Testing Sample",
+				"description": "Generate an API Testing sample YAML file."
 			}
 		],
 		"configuration": {
@@ -50,6 +55,10 @@
 					"when": "resourceLangId == yaml",
 					"group": "1_run",
 					"command": "atest"
+				},
+				{
+					"group": "1_run",
+					"command": "atest.sample"
 				}
 			],
 			"editor/context": [

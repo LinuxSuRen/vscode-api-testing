@@ -186,7 +186,27 @@ function activate(context) {
 		}
 	})
 
-	context.subscriptions.push(atest, atestRunWith);
+	let atestSample = vscode.commands.registerCommand('atest.sample', function(args) {
+		const addr = vscode.workspace.getConfiguration().get('api-testing.server')
+		const client = new serverProto.Runner(addr, grpc.credentials.createInsecure());
+		client.sample({} , function(err, response) {
+			if (err !== undefined && err !== null) {
+				apiConsole.show()
+				apiConsole.appendLine(err + " with " + addr);
+			} else {
+				const wsedit = new vscode.WorkspaceEdit();
+				const wsPath = vscode.workspace.workspaceFolders[0].uri.fsPath;
+				const filePath = vscode.Uri.file(wsPath + '/sample.yaml');
+				wsedit.createFile(filePath, { ignoreIfExists: true });
+				wsedit.insert(filePath, new vscode.Position(0, 0), response.message);
+				vscode.workspace.applyEdit(wsedit);
+
+				vscode.workspace.openTextDocument(filePath);
+			}
+		});
+	})
+
+	context.subscriptions.push(atest, atestRunWith, atestSample);
 
 	var which = require('which')
 	which('atest', { nothrow: true }).then((p) => {

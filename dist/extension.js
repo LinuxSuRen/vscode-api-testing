@@ -46993,7 +46993,26 @@ function activate(context) {
       });
     }
   });
-  context.subscriptions.push(atest, atestRunWith);
+  let atestSample = vscode.commands.registerCommand("atest.sample", function(args) {
+    const addr = vscode.workspace.getConfiguration().get("api-testing.server");
+    const client = new serverProto.Runner(addr, grpc.credentials.createInsecure());
+    client.sample({}, function(err, response) {
+      if (err !== void 0 && err !== null) {
+        apiConsole.show();
+        apiConsole.appendLine(err + " with " + addr);
+      } else {
+        const wsedit = new vscode.WorkspaceEdit();
+        const wsPath = vscode.workspace.workspaceFolders[0].uri.fsPath;
+        const filePath = vscode.Uri.file(wsPath + "/sample.yaml");
+        vscode.window.showInformationMessage(filePath.toString());
+        wsedit.createFile(filePath, { ignoreIfExists: true });
+        wsedit.insert(filePath, new vscode.Position(0, 0), response.message);
+        vscode.workspace.applyEdit(wsedit);
+        vscode.workspace.openTextDocument(filePath);
+      }
+    });
+  });
+  context.subscriptions.push(atest, atestRunWith, atestSample);
   var which = require_lib4();
   which("atest", { nothrow: true }).then((p) => {
     if (p) {
