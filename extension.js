@@ -96,7 +96,11 @@ function activate(context) {
 		if(vscode.workspace.workspaceFolders !== undefined) {
 			let filename = vscode.window.activeTextEditor.document.fileName
 			const addr = vscode.workspace.getConfiguration().get('api-testing.server')
+			const clean = vscode.workspace.getConfiguration().get('api-testing.clean-console')
 			apiConsole.show()
+			if (clean) {
+				apiConsole.clear()
+			}
 
 			const data = fs.readFileSync(filename);
 			let task = data.toString()
@@ -144,7 +148,12 @@ function activate(context) {
 			vscode.window.showQuickPick(items).then((val) => {
 				let filename = vscode.window.activeTextEditor.document.fileName
 				const addr = vscode.workspace.getConfiguration().get('api-testing.server')
+				const clean = vscode.workspace.getConfiguration().get('api-testing.clean-console')
 				apiConsole.show()
+				if (clean) {
+					apiConsole.clear()
+				}
+
 				const data = fs.readFileSync(filename);
 				const task = data.toString()
 
@@ -188,10 +197,14 @@ function activate(context) {
 
 	let atestSample = vscode.commands.registerCommand('atest.sample', function(args) {
 		const addr = vscode.workspace.getConfiguration().get('api-testing.server')
+		const clean = vscode.workspace.getConfiguration().get('api-testing.clean-console')
 		const client = new serverProto.Runner(addr, grpc.credentials.createInsecure());
 		client.sample({} , function(err, response) {
 			if (err !== undefined && err !== null) {
 				apiConsole.show()
+				if (clean) {
+					apiConsole.clear()
+				}
 				apiConsole.appendLine(err + " with " + addr);
 			} else {
 				const wsedit = new vscode.WorkspaceEdit();

@@ -46913,7 +46913,11 @@ function activate(context) {
     if (vscode.workspace.workspaceFolders !== void 0) {
       let filename = vscode.window.activeTextEditor.document.fileName;
       const addr = vscode.workspace.getConfiguration().get("api-testing.server");
+      const clean = vscode.workspace.getConfiguration().get("api-testing.clean-console");
       apiConsole.show();
+      if (clean) {
+        apiConsole.clear();
+      }
       const data = fs.readFileSync(filename);
       let task = data.toString();
       let kind = "suite";
@@ -46954,7 +46958,11 @@ function activate(context) {
       vscode.window.showQuickPick(items).then((val) => {
         let filename = vscode.window.activeTextEditor.document.fileName;
         const addr = vscode.workspace.getConfiguration().get("api-testing.server");
+        const clean = vscode.workspace.getConfiguration().get("api-testing.clean-console");
         apiConsole.show();
+        if (clean) {
+          apiConsole.clear();
+        }
         const data = fs.readFileSync(filename);
         const task = data.toString();
         let kind = "suite";
@@ -46995,16 +47003,19 @@ function activate(context) {
   });
   let atestSample = vscode.commands.registerCommand("atest.sample", function(args) {
     const addr = vscode.workspace.getConfiguration().get("api-testing.server");
+    const clean = vscode.workspace.getConfiguration().get("api-testing.clean-console");
     const client = new serverProto.Runner(addr, grpc.credentials.createInsecure());
     client.sample({}, function(err, response) {
       if (err !== void 0 && err !== null) {
         apiConsole.show();
+        if (clean) {
+          apiConsole.clear();
+        }
         apiConsole.appendLine(err + " with " + addr);
       } else {
         const wsedit = new vscode.WorkspaceEdit();
         const wsPath = vscode.workspace.workspaceFolders[0].uri.fsPath;
         const filePath = vscode.Uri.file(wsPath + "/sample.yaml");
-        vscode.window.showInformationMessage(filePath.toString());
         wsedit.createFile(filePath, { ignoreIfExists: true });
         wsedit.insert(filePath, new vscode.Position(0, 0), response.message);
         vscode.workspace.applyEdit(wsedit);

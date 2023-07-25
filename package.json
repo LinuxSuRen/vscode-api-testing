@@ -2,7 +2,7 @@
 	"name": "api-testing",
 	"displayName": "API Testing",
 	"description": "YAML based API Testing",
-	"version": "0.0.12",
+	"version": "0.0.13",
 	"repository": "https://github.com/linuxsuren/vscode-api-testing",
 	"engines": {
 		"vscode": "^1.68.0"
@@ -39,6 +39,11 @@
 					"type": "string",
 					"default": "localhost:7070",
 					"description": "server"
+				},
+				"api-testing.clean-console": {
+					"type": "boolean",
+					"default": true,
+					"description": "Clean the console before printing the result"
 				}
 			}
 		},
