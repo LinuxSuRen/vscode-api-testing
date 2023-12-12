@@ -1,0 +1,6 @@
+tasks:
+  - init: npm install && npm run compile
+
+vscode:
+  extensions:
+    - linuxsuren.api-testing
