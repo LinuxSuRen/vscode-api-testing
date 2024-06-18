@@ -1,5 +1,7 @@
 [API Testing](https://github.com/linuxsuren/api-testing) for Visual Studio Code
 
+All issues of this project can be found at [linuxsuren/api-testing](https://github.com/LinuxSuRen/api-testing/issues).
+
 ## Prerequisities
 Start [atest](https://github.com/linuxsuren/api-testing) in server mode before get started.
 
