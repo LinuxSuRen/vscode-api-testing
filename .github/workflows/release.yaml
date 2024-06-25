@@ -1,7 +1,11 @@
+name: Build
+
 on:
   push:
     branches:
       - master
+    tags:
+      - "*"
   release:
     types:
     - created
@@ -24,8 +28,33 @@ jobs:
       if: runner.os == 'Linux'
     - run: npm test
       if: runner.os != 'Linux'
-    # - name: Publish
-    #   if: success() && startsWith(github.ref, 'refs/tags/') && matrix.os == 'ubuntu-latest'
-    #   run: npm run deploy
-    #   env:
-    #     VSCE_PAT: ${{ secrets.VSCE_PAT }}
+
+  Release:
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@0ad4b8fadaa221de15dcec353f45205ec38ea70b  # v4.1.4
+      - name: Update version
+        if: github.event_name != 'pull_request'
+        run: |
+          export TAG=${GITHUB_REF#refs/*/}
+          export TAG=${TAG#"v"}
+          echo "change the version to ${TAG}"
+          jq '.version = env.TAG' package.json > package.json.new && mv package.json.new package.json
+      - name: Build
+        run: |
+          npm i
+          npm install -g @vscode/vsce
+          vsce package
+      - name: Publish
+        if: github.event_name != 'pull_request'
+        run: |
+          npx ovsx publish -p ${{ secrets.OPEN_VSX_TKN }} *.vsix
+      - name: Upload Release Asset
+        if: github.event_name != 'pull_request'
+        run: |
+          export TAG=${GITHUB_REF#refs/*/}
+          gh release upload ${TAG} *.vsix
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
