@@ -30,6 +30,10 @@
 				"command": "atest.sample",
 				"title": "API Testing Sample",
 				"description": "Generate an API Testing sample YAML file."
+			},
+			{
+				"command": "atest.startMock",
+				"title": "Start API Testing Mock Server"
 			}
 		],
 		"configuration": {

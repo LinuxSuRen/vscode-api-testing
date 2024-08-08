@@ -46616,6 +46616,88 @@ var require_src10 = __commonJS({
   }
 });
 
+// api-testing.js
+var require_api_testing = __commonJS({
+  "api-testing.js"(exports2, module2) {
+    var vscode2 = require("vscode");
+    var codeLense = (document2, token) => {
+      const range = new vscode2.Range(0, 1, 10, 10);
+      const lens = new vscode2.CodeLens(range, {
+        command: "atest",
+        title: "run suite"
+      });
+      const lensRunWith = new vscode2.CodeLens(range, {
+        command: "atest.runwith",
+        title: "run suite with env"
+      });
+      let result = [lens, lensRunWith];
+      for (let i = 0; i < document2.lineCount; i++) {
+        let nameAnchor = document2.lineAt(i).text;
+        nameAnchor = nameAnchor.trimLeft(" ", "");
+        if (nameAnchor.startsWith("- name: ")) {
+          let name = nameAnchor.replace("- name: ", "");
+          const range2 = new vscode2.Range(i, 1, i, 10);
+          const testcaseLens = new vscode2.CodeLens(range2, {
+            command: "atest",
+            title: "run",
+            arguments: [name, "info"]
+          });
+          const testcaseDebugLens = new vscode2.CodeLens(range2, {
+            command: "atest",
+            title: "debug",
+            arguments: [name, "debug"]
+          });
+          result.push(testcaseLens, testcaseDebugLens);
+        }
+      }
+      return result;
+    };
+    module2.exports = codeLense;
+  }
+});
+
+// api-testing-mock.js
+var require_api_testing_mock = __commonJS({
+  "api-testing-mock.js"(exports2, module2) {
+    var vscode2 = require("vscode");
+    var fs2 = require("fs");
+    var codeLense = (document2, token) => {
+      const range = new vscode2.Range(0, 1, 10, 10);
+      const lens = new vscode2.CodeLens(range, {
+        command: "atest.startMock",
+        title: "Start Mock Server"
+      });
+      return [lens];
+    };
+    var terminalName = "atest mock";
+    var startMock = (filename) => {
+      let arg = "";
+      const data = fs2.readFileSync(filename);
+      data.toString().split("\n").forEach(function(line) {
+        if (line.startsWith("#!arg")) {
+          arg = line.substring(5);
+          return;
+        }
+      });
+      let terminal;
+      vscode2.window.terminals.forEach((t) => {
+        if (t.name === terminalName) {
+          terminal = t;
+        }
+      });
+      if (!terminal) {
+        terminal = vscode2.window.createTerminal({ name: terminalName });
+      }
+      terminal.show();
+      terminal.sendText(`atest mock ${filename} ${arg}`);
+    };
+    module2.exports = {
+      codeLense,
+      startMock
+    };
+  }
+});
+
 // node_modules/isexe/windows.js
 var require_windows = __commonJS({
   "node_modules/isexe/windows.js"(exports2, module2) {
@@ -46841,6 +46923,8 @@ var cp = require("child_process");
 var grpc = require_src8();
 var protoLoader = require_src10();
 var PROTO_PATH = __dirname + "/server.proto";
+var atestCodeLense = require_api_testing();
+var atestCodeLenseMock = require_api_testing_mock();
 var packageDefinition = protoLoader.loadSync(
   PROTO_PATH,
   {
@@ -46869,39 +46953,11 @@ function activate(context) {
   console.log('Congratulations, your extension "api-testing" is now active!');
   const toggleLink = {
     provideCodeLenses: function(document2, token) {
-      if (document2.lineAt(0).text !== "#!api-testing") {
-        return [];
+      if (document2.lineAt(0).text === "#!api-testing") {
+        return atestCodeLense(document2, token);
+      } else if (document2.lineAt(0).text === "#!api-testing-mock") {
+        return atestCodeLenseMock.codeLense(document2, token);
       }
-      const range = new vscode.Range(0, 1, 10, 10);
-      const lens = new vscode.CodeLens(range, {
-        command: "atest",
-        title: "run suite"
-      });
-      const lensRunWith = new vscode.CodeLens(range, {
-        command: "atest.runwith",
-        title: "run suite with env"
-      });
-      let result = [lens, lensRunWith];
-      for (let i = 0; i < document2.lineCount; i++) {
-        let nameAnchor = document2.lineAt(i).text;
-        nameAnchor = nameAnchor.trimLeft(" ", "");
-        if (nameAnchor.startsWith("- name: ")) {
-          let name = nameAnchor.replace("- name: ", "");
-          const range2 = new vscode.Range(i, 1, i, 10);
-          const testcaseLens = new vscode.CodeLens(range2, {
-            command: "atest",
-            title: "run",
-            arguments: [name, "info"]
-          });
-          const testcaseDebugLens = new vscode.CodeLens(range2, {
-            command: "atest",
-            title: "debug",
-            arguments: [name, "debug"]
-          });
-          result.push(testcaseLens, testcaseDebugLens);
-        }
-      }
-      return result;
     },
     resolveCodeLens: function(code, token) {
       return code;
@@ -47023,14 +47079,20 @@ function activate(context) {
       }
     });
   });
-  context.subscriptions.push(atest, atestRunWith, atestSample);
+  let startMockServerCommand = vscode.commands.registerCommand("atest.startMock", function(args) {
+    if (vscode.workspace.workspaceFolders !== void 0) {
+      let filename = vscode.window.activeTextEditor.document.fileName;
+      atestCodeLenseMock.startMock(filename);
+    }
+  });
+  context.subscriptions.push(atest, atestRunWith, atestSample, startMockServerCommand);
   var which = require_lib4();
   which("atest", { nothrow: true }).then((p) => {
     if (p) {
       startAtestServer();
     } else {
       vscode.window.showInformationMessage("Start to install API Testing.");
-      https.get("https://ghproxy.com/https://github.com/LinuxSuRen/api-testing/releases/latest/download/atest-linux-amd64.tar.gz", function(response) {
+      https.get("https://files.m.daocloud.io/github.com/LinuxSuRen/api-testing/releases/latest/download/atest-linux-amd64.tar.gz", function(response) {
         const file = fs.createWriteStream("/tmp/atest.tar.gz");
         response.pipe(file);
         vscode.window.showInformationMessage("Receiving API Testing binary file.");
