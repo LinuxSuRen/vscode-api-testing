@@ -2,7 +2,7 @@
 	"name": "api-testing",
 	"displayName": "API Testing",
 	"description": "YAML based API Testing",
-	"version": "0.0.17",
+	"version": "0.0.18",
 	"repository": "https://github.com/linuxsuren/vscode-api-testing",
 	"engines": {
 		"vscode": "^1.68.0"
@@ -73,6 +73,10 @@
 				{
 					"group": "1_run",
 					"command": "atest.sample"
+				},
+				{
+					"group": "1_run",
+					"command": "atest.sampleMock"
 				}
 			],
 			"editor/context": [
