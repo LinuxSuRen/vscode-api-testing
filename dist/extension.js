@@ -47079,13 +47079,22 @@ function activate(context) {
       }
     });
   });
+  let atestMockSample = vscode.commands.registerCommand("atest.sampleMock", function(args) {
+    const wsedit = new vscode.WorkspaceEdit();
+    const wsPath = vscode.workspace.workspaceFolders[0].uri.fsPath;
+    const filePath = vscode.Uri.file(wsPath + "/mock.yaml");
+    wsedit.createFile(filePath, { ignoreIfExists: true });
+    wsedit.insert(filePath, new vscode.Position(0, 0), mockSample);
+    vscode.workspace.applyEdit(wsedit);
+    vscode.workspace.openTextDocument(filePath);
+  });
   let startMockServerCommand = vscode.commands.registerCommand("atest.startMock", function(args) {
     if (vscode.workspace.workspaceFolders !== void 0) {
       let filename = vscode.window.activeTextEditor.document.fileName;
       atestCodeLenseMock.startMock(filename);
     }
   });
-  context.subscriptions.push(atest, atestRunWith, atestSample, startMockServerCommand);
+  context.subscriptions.push(atest, atestRunWith, atestSample, atestMockSample, startMockServerCommand);
   var which = require_lib4();
   which("atest", { nothrow: true }).then((p) => {
     if (p) {
@@ -47170,6 +47179,27 @@ function startAtestServer() {
 var defaultEnv = `- name: localhost
   env:
     SERVER: http://localhost:7070`;
+var mockSample = `#!api-testing-mock
+#!arg --prefix /
+# yaml-language-server: $schema=https://linuxsuren.github.io/api-testing/api-testing-mock-schema.json
+objects:
+  - name: reports
+    sample: |
+      {
+        "name": "api-testing",
+        "remark": "",
+        "taskID": "",
+        "failedCount": 1,
+        "color": "{{ randEnum "blue" "read" "pink" }}"
+      }
+items:
+  - name: base64
+    request:
+      path: /v1/base64
+    response:
+      body: aGVsbG8=
+      encoder: base64
+`;
 function deactivate() {
 }
 module.exports = {

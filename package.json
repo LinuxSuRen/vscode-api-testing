@@ -2,7 +2,7 @@
 	"name": "api-testing",
 	"displayName": "API Testing",
 	"description": "YAML based API Testing",
-	"version": "0.0.16",
+	"version": "0.0.18",
 	"repository": "https://github.com/linuxsuren/vscode-api-testing",
 	"engines": {
 		"vscode": "^1.68.0"
@@ -30,6 +30,11 @@
 				"command": "atest.sample",
 				"title": "API Testing Sample",
 				"description": "Generate an API Testing sample YAML file."
+			},
+			{
+				"command": "atest.sampleMock",
+				"title": "API Testing Mock Sample",
+				"description": "Generate a sample mock YAML file."
 			},
 			{
 				"command": "atest.startMock",
@@ -68,6 +73,10 @@
 				{
 					"group": "1_run",
 					"command": "atest.sample"
+				},
+				{
+					"group": "1_run",
+					"command": "atest.sampleMock"
 				}
 			],
 			"editor/context": [
