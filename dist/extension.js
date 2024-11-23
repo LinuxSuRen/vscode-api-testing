@@ -47095,14 +47095,28 @@ function activate(context) {
     }
   });
   context.subscriptions.push(atest, atestRunWith, atestSample, atestMockSample, startMockServerCommand);
+  const os = require("os");
+  const osName = os.type().toLowerCase();
+  let archName = os.arch();
+  switch (archName) {
+    case "x64":
+      archName = "amd64";
+      break;
+  }
+  let fileSuffix = "tar.gz";
+  switch (osName) {
+    case "windows":
+      fileSuffix = "zip";
+      break;
+  }
   var which = require_lib4();
   which("atest", { nothrow: true }).then((p) => {
     if (p) {
       startAtestServer();
     } else {
       vscode.window.showInformationMessage("Start to install API Testing.");
-      https.get("https://files.m.daocloud.io/github.com/LinuxSuRen/api-testing/releases/latest/download/atest-linux-amd64.tar.gz", function(response) {
-        const file = fs.createWriteStream("/tmp/atest.tar.gz");
+      https.get(`https://files.m.daocloud.io/github.com/LinuxSuRen/api-testing/releases/latest/download/atest-${osName}-${archName}.${fileSuffix}`, function(response) {
+        const file = fs.createWriteStream(`/tmp/atest.${fileSuffix}`);
         response.pipe(file);
         vscode.window.showInformationMessage("Receiving API Testing binary file.");
         file.on("finish", () => {
@@ -47110,13 +47124,13 @@ function activate(context) {
             vscode.window.showInformationMessage("API Testing server downloaded.");
             try {
               fs.accessSync("/usr/local/bin", fs.constants.W_OK);
-              cp.execSync("tar xzvf /tmp/atest.tar.gz atest && install atest /usr/local/bin/atest");
+              cp.execSync(`tar xzvf /tmp/atest.${fileSuffix} atest && install atest /usr/local/bin/atest`);
               startAtestServer();
             } catch (err) {
               vscode.window.showInformationMessage("Install atest in a new terminal?", "Yes", "No").then((v) => {
                 if (v === "Yes") {
                   let terminal = vscode.window.createTerminal({ name: "atest" });
-                  terminal.sendText("tar xzvf /tmp/atest.tar.gz atest && sudo install atest /usr/local/bin/atest && rm -rf atest && sudo atest service install && sudo atest service start && exit");
+                  terminal.sendText(`'tar xzvf /tmp/atest.${fileSuffix} atest && sudo install atest /usr/local/bin/atest && rm -rf atest && sudo atest service install && sudo atest service start && exit`);
                   terminal.show();
                 }
               });
