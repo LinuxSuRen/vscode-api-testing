@@ -29,7 +29,12 @@ const codeLense = (document, token) => {
                 title: 'debug',
                 arguments: [name, "debug"]
             })
-            result.push(testcaseLens, testcaseDebugLens)
+            const testcaseTraceLens = new vscode.CodeLens(range, {
+                command: 'atest',
+                title: 'trace',
+                arguments: [name, "trace"]
+            })
+            result.push(testcaseLens, testcaseDebugLens, testcaseTraceLens)
         }
     }
 

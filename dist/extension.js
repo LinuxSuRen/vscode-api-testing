@@ -46647,7 +46647,12 @@ var require_api_testing = __commonJS({
             title: "debug",
             arguments: [name, "debug"]
           });
-          result.push(testcaseLens, testcaseDebugLens);
+          const testcaseTraceLens = new vscode2.CodeLens(range2, {
+            command: "atest",
+            title: "trace",
+            arguments: [name, "trace"]
+          });
+          result.push(testcaseLens, testcaseDebugLens, testcaseTraceLens);
         }
       }
       return result;
@@ -46992,8 +46997,8 @@ function activate(context) {
         if (err !== void 0 && err !== null) {
           apiConsole.appendLine(err + " with " + addr);
         } else {
-          apiConsole.appendLine(response.message);
-          apiConsole.appendLine(response.error);
+          apiConsole.appendLine(response.message.trim());
+          apiConsole.appendLine(response.error.trim());
         }
       });
     } else {
