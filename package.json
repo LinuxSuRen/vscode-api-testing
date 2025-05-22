@@ -2,7 +2,7 @@
 	"name": "api-testing",
 	"displayName": "API Testing",
 	"description": "YAML based API Testing",
-	"version": "0.0.18",
+	"version": "0.0.19",
 	"repository": "https://github.com/linuxsuren/vscode-api-testing",
 	"engines": {
 		"vscode": "^1.68.0"
