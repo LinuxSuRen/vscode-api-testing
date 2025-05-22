@@ -90,8 +90,8 @@ function activate(context) {
 				if (err !== undefined && err !== null) {
 					apiConsole.appendLine(err + " with " + addr);
 				} else {
-					apiConsole.appendLine(response.message);
-					apiConsole.appendLine(response.error);
+					apiConsole.appendLine(response.message.trim());
+					apiConsole.appendLine(response.error.trim());
 				}
 			});
 		}  else {
